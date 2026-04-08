@@ -515,4 +515,3 @@ public class Main3D extends Application {
     private void createEarthMoon() { earthMoon=new Sphere(3.8); earthMoon.setMaterial(new PhongMaterial(Color.LIGHTGRAY)); root3D.getChildren().add(earthMoon); }
     public static void main(String[] args) { launch(args); }
 }
-//Проверка Comita

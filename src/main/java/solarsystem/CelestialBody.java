@@ -41,4 +41,3 @@ public class CelestialBody {
     public double getY() { return y; }
     public double getZ() { return z; }
 }
-//Проверка Comita
