@@ -98,3 +98,4 @@ public class SolarSystem {
     public List<CelestialBody> getBodies() { return bodies; }
     public void addBody(CelestialBody b) { bodies.add(b); }
 }
+//Проверка Comita
