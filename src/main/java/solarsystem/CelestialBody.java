@@ -1,43 +1,43 @@
 package solarsystem;
-
 import javafx.scene.paint.Color;
 
 public class CelestialBody {
-    private final String name;
-    private final double radius;
-    private final Color color;
-    private final double orbitRadius;
-    private double angle;
-    private final double angularSpeed;
-    private double x, y, z;
+    public final String name;
+    public double radius, mass;
+    public final Color color;
+    public double x, y, z;
+    public double vx, vy, vz;
+    public double ax, ay, az;
+    public boolean isDestroyed = false;
+    public boolean isBlackHole = false;
 
-    public CelestialBody(String name, double radius, Color color,
-                         double orbitRadius, double startAngle, double angularSpeed) {
+    public CelestialBody(String name, double radius, double mass, Color color, double x, double z) {
         this.name = name;
         this.radius = radius;
+        this.mass = mass;
         this.color = color;
-        this.orbitRadius = orbitRadius;
-        this.angle = startAngle;
-        this.angularSpeed = angularSpeed;
-        updateCoordinates();
+        this.x = x;
+        this.z = z;
+        this.y = 0;
+        this.vx = this.vy = this.vz = 0;
+        this.ax = this.ay = this.az = 0;
     }
 
-    public void move(double timeSpeed) {
-        angle += angularSpeed * timeSpeed;
-        updateCoordinates();
+    public void integratePosition(double dt) {
+        // Velocity Verlet integration
+        x += vx * dt + 0.5 * ax * dt * dt;
+        y += vy * dt + 0.5 * ay * dt * dt;
+        z += vz * dt + 0.5 * az * dt * dt;
+
+        vx += ax * dt;
+        vy += ay * dt;
+        vz += az * dt;
     }
 
-    private void updateCoordinates() {
-        x = orbitRadius * Math.cos(angle);
-        z = orbitRadius * Math.sin(angle);
-        y = 0;
-    }
-
-    public String getName()          { return name; }
-    public double getX()             { return x; }
-    public double getY()             { return y; }
-    public double getZ()             { return z; }
-    public double getRadius()        { return radius; }
-    public Color  getColor()         { return color; }
-    public double getOrbitRadius()   { return orbitRadius; }
+    public double getRadius() { return radius; }
+    public double getMass() { return mass; }
+    public Color getColor() { return color; }
+    public double getX() { return x; }
+    public double getY() { return y; }
+    public double getZ() { return z; }
 }
