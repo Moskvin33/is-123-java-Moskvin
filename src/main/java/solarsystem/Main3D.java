@@ -31,7 +31,6 @@ public class Main3D extends Application {
     private List<Box> cometTail; private List<Sphere> tailGlowParticles;
     private boolean cometActive = false; private int targetIndex = -2;
     private double cometHeat = 0.5; private List<Sphere> cometTrailParticles = new ArrayList<>();
-
     private List<Sphere> asteroids = new ArrayList<>();
     private List<Double> asteroidSpeeds = new ArrayList<>();
     private List<Sphere> starDust = new ArrayList<>();
@@ -60,6 +59,9 @@ public class Main3D extends Application {
     private double physicsTimeAcc = 0;
     private final double PHYSICS_DT = 0.016;
 
+    // RED Database listener
+    private RedDbCommand dbListener;
+
     private class OrbitLine { List<Sphere> dots = new ArrayList<>(); double radius; OrbitLine(double r){ this.radius=r; } }
     private class Fragment { Sphere sphere; double vx,vy,vz,life; Fragment(Sphere s,double vx,double vy,double vz){ this.sphere=s; this.vx=vx; this.vy=vy; this.vz=vz; this.life=1.0; } }
     private class GravitationalImpulse { double x,y,z,strength,radius,life; GravitationalImpulse(double x,double y,double z,double s,double r){ this.x=x;this.y=y;this.z=z;this.strength=s;this.radius=r;this.life=3.0; } }
@@ -78,10 +80,25 @@ public class Main3D extends Application {
         createStars(); createStarDust(); createAsteroidBelt();
         subScene3D.setCamera(camera); rootPane.getChildren().add(subScene3D);
         setupHUD(); setupControls();
+
+        // Initialize RED Database connection
+        initRedDatabase();
+
         startGameLoop(); startMovementTimer(); startHUDUpdater();
         primaryStage.setTitle("3D Солнечная система");
         primaryStage.setScene(scene); primaryStage.show();
         printControls();
+    }
+
+    private void initRedDatabase() {
+        String dbHost = "localhost";
+        int dbPort = 3050;
+        String dbName = "D:/Solar.fdb";
+        String dbUser = "SYSDBA";
+        String dbPassword = "masterkey";
+
+        dbListener = new RedDbCommand(dbHost, dbPort, dbName, dbUser, dbPassword);
+        dbListener.startPolling(2);
     }
 
     private void setupHUD() {
@@ -107,23 +124,23 @@ public class Main3D extends Application {
 
     private void updateHUDText() {
         StringBuilder sb = new StringBuilder();
-        sb.append("ОГНЕННАЯ КОМЕТА\n Уничтожено: ").append(destroyedPlanets).append("\n\n");
+        sb.append("ОГНЕННАЯ КОМЕТА\n Уничтожено: ").append(destroyedPlanets).append("\n\n ");
         if (cometActive && cometGroup!=null) {
             double sp = Math.hypot(cometGroup.getTranslateX(),Math.hypot(cometGroup.getTranslateY(),cometGroup.getTranslateZ()))*10;
             double dist = Math.hypot(getTargetX()-cometGroup.getTranslateX(),Math.hypot(getTargetY()-cometGroup.getTranslateY(),getTargetZ()-cometGroup.getTranslateZ()));
             double temp = 500 + cometHeat * 2000;
             String targetName = getTargetDisplayName();
-            sb.append("КОМЕТА:\n").append(String.format("Скорость: %.1f\n Дистанция: %.0f\n Температура: %.0f C\n Цель: %s\n\n", sp, dist, temp, targetName));
+            sb.append("КОМЕТА:\n ").append(String.format("Скорость: %.1f\n Дистанция: %.0f\n Температура: %.0f C\n Цель: %s\n\n ", sp, dist, temp, targetName));
         }
-        if (blackHoleActive) sb.append("ЧЕРНАЯ ДЫРА:\n Притяжение: Активно\n\n");
-        sb.append("УПРАВЛЕНИЕ:\n ПКМ+мышь - вращение\n WASD - движение | Q/E - вверх/вниз\n 0 - СОЛНЦЕ | 1-8 - ПЛАНЕТЫ\n C/F - камера за кометой/свободная\n B - чёрная дыра | Пробел - пауза\n +/- - скорость | R - сброс | X - рестарт");
+        if (blackHoleActive) sb.append("ЧЕРНАЯ ДЫРА:\n Притяжение: Активно\n\n ");
+        sb.append("УПРАВЛЕНИЕ:\n ПКМ+мышь - вращение\n WASD - движение | Q/E - вверх/вниз\n 0 - СОЛНЦЕ | 1-8 - ПЛАНЕТЫ\n C/F - камера за кометой/свободная\n B - чёрная дыра | Пробел - пауза\n +/- - скорость | R - сброс | X - рестарт ");
         hudText.setText(sb.toString());
     }
 
     private String getTargetDisplayName() {
         if (targetIndex == -1) return "СОЛНЦЕ";
         if (targetIndex >= 1 && targetIndex <= 8) {
-            String[] names = {"", "Меркурий", "Венера", "Земля", "Марс", "Юпитер", "Сатурн", "Уран", "Нептун"};
+            String[] names = {" ", "Меркурий", "Венера", "Земля", "Марс", "Юпитер", "Сатурн", "Уран", "Нептун"};
             return names[targetIndex];
         }
         return "Неизвестно";
@@ -163,10 +180,7 @@ public class Main3D extends Application {
 
     private void launchComet(int target) {
         if(cometActive) return;
-        // target: 0 = Солнце, 1-8 = планеты
-        // Сохраняем как есть: 0 - Солнце, 1-8 - планеты
         targetIndex = target;
-
         cometGroup=new Group();
         cometNucleus=new Sphere(5);
         cometNucleus.setMaterial(new PhongMaterial(Color.rgb(180,80,40)));
@@ -214,14 +228,13 @@ public class Main3D extends Application {
             sz = Math.sin(ang) * sd;
             System.out.println("Комета запущена к СОЛНЦУ!");
         } else {
-            // target от 1 до 8 - индекс планеты в списке solarSystem
             List<CelestialBody> bodies = solarSystem.getBodies();
             if (target < bodies.size()) {
                 CelestialBody tg = bodies.get(target);
                 sx = tg.x + Math.cos(ang) * sd;
                 sy = tg.y + h;
                 sz = tg.z + Math.sin(ang) * sd;
-                String[] names = {"", "Меркурий", "Венера", "Земля", "Марс", "Юпитер", "Сатурн", "Уран", "Нептун"};
+                String[] names = {" ", "Меркурий", "Венера", "Земля", "Марс", "Юпитер", "Сатурн", "Уран", "Нептун"};
                 System.out.println("Комета запущена к планете: " + (target <= 8 ? names[target] : "Неизвестно"));
             } else {
                 return;
@@ -240,7 +253,7 @@ public class Main3D extends Application {
 
     private String getPlanetName(int n) {
         if (n == 0) return "Солнце";
-        String[] names = {"", "Меркурий", "Венера", "Земля", "Марс", "Юпитер", "Сатурн", "Уран", "Нептун"};
+        String[] names = {" ", "Меркурий", "Венера", "Земля", "Марс", "Юпитер", "Сатурн", "Уран", "Нептун"};
         return n >= 1 && n <= 8 ? names[n] : "Неизвестно";
     }
 
@@ -316,6 +329,10 @@ public class Main3D extends Application {
                 double frameDt = Math.min((now-lastTime)/1_000_000_000.0, 0.1);
                 lastTime = now;
                 updateCameraFollow();
+
+                // Process commands from RED Database
+                if (dbListener != null) dbListener.processCommands(Main3D.this);
+
                 if(isRunning) {
                     physicsTimeAcc += frameDt * timeSpeed;
                     while(physicsTimeAcc >= PHYSICS_DT) {
@@ -480,7 +497,7 @@ public class Main3D extends Application {
         scene.setOnMouseDragged(e->{ if(rightMousePressed){ double dx=e.getSceneX()-mouseOldX,dy=e.getSceneY()-mouseOldY; if(cameraMode==CameraMode.FOLLOW_COMET && cometActive){ followYaw+=dx*0.5; followPitch+=dy*0.3; followPitch=Math.max(-30,Math.min(30,followPitch)); } else if(cameraMode==CameraMode.FREE){ cameraRotateY.setAngle(cameraRotateY.getAngle()-dx*0.4); cameraRotateX.setAngle(cameraRotateX.getAngle()-dy*0.4); cameraRotateX.setAngle(Math.max(-89,Math.min(89,cameraRotateX.getAngle()))); } mouseOldX=e.getSceneX(); mouseOldY=e.getSceneY(); } });
         scene.setOnKeyPressed(e->{
             switch(e.getCode()){
-                case SPACE: isRunning=!isRunning; System.out.println(isRunning?"Система запущена":"Система на паузе"); break;
+                case SPACE: isRunning=!isRunning; System.out.println(isRunning?"Система запущена ":"Система на паузе "); break;
                 case ADD: case EQUALS: timeSpeed*=1.5; timeSpeed=Math.min(timeSpeed,8.0); break;
                 case SUBTRACT: case MINUS: timeSpeed/=1.5; timeSpeed=Math.max(timeSpeed,0.1); break;
                 case R: camera.setTranslateX(0);camera.setTranslateY(0);camera.setTranslateZ(2800);cameraRotateY.setAngle(180);cameraRotateX.setAngle(0);followYaw=0;followPitch=0;cameraMode=CameraMode.FREE; break;
@@ -513,5 +530,102 @@ public class Main3D extends Application {
     private void updateCameraFollow() { if(cameraMode==CameraMode.FOLLOW_COMET && cometActive && cometGroup!=null){ double cx=cometGroup.getTranslateX(),cy=cometGroup.getTranslateY(),cz=cometGroup.getTranslateZ(); double dirX=0,dirZ=-1; if(targetIndex>=1 && targetIndex<planetSpheres.size()){ Sphere tg=planetSpheres.get(targetIndex); double dx=tg.getTranslateX()-cx,dz=tg.getTranslateZ()-cz,len=Math.hypot(dx,dz); if(len>0.01){ dirX=dx/len; dirZ=dz/len; } } else if(targetIndex==0){ double dx=-cx,dz=-cz,len=Math.hypot(dx,dz); if(len>0.01){ dirX=dx/len; dirZ=dz/len; } } camera.setTranslateX(cx-dirX*followDistance); camera.setTranslateY(cy+followHeight); camera.setTranslateZ(cz-dirZ*followDistance); double ang=Math.toDegrees(Math.atan2(cx-camera.getTranslateX(),cz-camera.getTranslateZ())); cameraRotateY.setAngle(ang+followYaw); cameraRotateX.setAngle(followPitch); } }
     private void createSaturnRings() { if(planetSpheres.size()<=5) return; saturnRings=new Group(); double[] rr={24,29,35},rw={4.5,3.2,2.8}; for(int i=0;i<rr.length;i++){ Cylinder c=new Cylinder(rr[i],rw[i]); c.setRotationAxis(Rotate.X_AXIS); c.setRotate(82); c.setMaterial(new PhongMaterial(Color.rgb(230,210,170,0.65+i*0.1))); saturnRings.getChildren().add(c); } root3D.getChildren().add(saturnRings); }
     private void createEarthMoon() { earthMoon=new Sphere(3.8); earthMoon.setMaterial(new PhongMaterial(Color.LIGHTGRAY)); root3D.getChildren().add(earthMoon); }
+
+    public void handleDbCommand(RedDbCommand.DbCommand cmd) {
+        String action = cmd.action != null ? cmd.action.trim() : "";
+
+        switch (action) {
+            case "create_planet" -> createPlanetFromDb(cmd);
+            case "destroy_planet" -> destroyPlanetFromDb(cmd);
+            case "set_time_speed" -> {
+                timeSpeed = Math.max(0.1, Math.min(8.0, cmd.orbit));
+                System.out.println("⏱ Time speed: " + timeSpeed);
+            }
+            case "launch_comet" -> {
+                int target = (int) cmd.orbit;
+                if (target >= 0 && target <= 8) {
+                    launchComet(target);
+                    System.out.println("🚀 Comet launched (DB) to target: " + target);
+                }
+            }
+            case "create_black_hole" -> {
+                spawnBlackHole();
+                System.out.println("🕳 Black hole created (DB)!");
+            }
+            case "explode_sun" -> {
+                explodeSun();
+                System.out.println("☀️ Sun exploded (DB)!");
+            }
+            case "reset_system" -> {
+                resetSystem();
+                System.out.println("🔄 System reset (DB)!");
+            }
+            default -> System.out.println("⚠️ Unknown command: '" + cmd.action + "'");
+        }
+    }
+
+    private void createPlanetFromDb(RedDbCommand.DbCommand cmd) {
+        Color color = (cmd.colorHex != null && cmd.colorHex.matches("#[0-9A-Fa-f]{6}"))
+                ? Color.web(cmd.colorHex) : Color.rgb(100, 150, 200);
+
+        String name = cmd.name != null ? cmd.name : "NewPlanet";
+        double radius = cmd.radius > 0 ? cmd.radius : 5;
+        double mass = cmd.mass > 0 ? cmd.mass : 10;
+        double orbit = cmd.orbit > 0 ? cmd.orbit : 200;
+
+        CelestialBody body = new CelestialBody(name, radius, mass, color, orbit, 0);
+
+        double r = Math.hypot(body.x, body.z);
+        if (r > 1.0) {
+            double v = Math.sqrt(40.0 * 20000.0 / r);
+            body.vx = -v * (body.z / r);
+            body.vz = v * (body.x / r);
+        }
+
+        solarSystem.addBody(body);
+
+        Sphere sphere = new Sphere(radius);
+        sphere.setMaterial(new PhongMaterial(color));
+        sphere.setTranslateX(body.x);
+        sphere.setTranslateZ(body.z);
+        root3D.getChildren().add(sphere);
+        planetSpheres.add(sphere);
+
+        Rotate rot = new Rotate(0, Rotate.Y_AXIS);
+        sphere.getTransforms().add(rot);
+        planetRotations.add(rot);
+
+        if (orbit > 10) createOrbitLine(orbit, color);
+
+        System.out.println("Planet created: " + name);
+    }
+
+    private void createOrbitLine(double radius, Color color) {
+        for (int d = 0; d < 360; d += 15) {
+            double rad = Math.toRadians(d);
+            Sphere dot = new Sphere(0.6);
+            dot.setMaterial(new PhongMaterial(Color.rgb(
+                    (int)(color.getRed()*255),
+                    (int)(color.getGreen()*255),
+                    (int)(color.getBlue()*255), 0.25)));
+            dot.setTranslateX(radius * Math.cos(rad));
+            dot.setTranslateZ(radius * Math.sin(rad));
+            root3D.getChildren().add(dot);
+        }
+    }
+
+    private void destroyPlanetFromDb(RedDbCommand.DbCommand cmd) {
+        if (cmd.name == null) return;
+        List<CelestialBody> bodies = solarSystem.getBodies();
+        for (int i = 1; i < bodies.size(); i++) {
+            if (bodies.get(i).name.equals(cmd.name)) {
+                explodePlanet(i);
+                System.out.println("Destroyed: " + cmd.name);
+                return;
+            }
+        }
+        System.out.println("⚠️ Planet not found: " + cmd.name);
+    }
+
     public static void main(String[] args) { launch(args); }
 }

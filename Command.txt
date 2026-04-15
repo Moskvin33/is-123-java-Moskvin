@@ -1,0 +1,252 @@
+================================================================================
+                    SQL ЗАПРОСЫ ДЛЯ SOLAR SYSTEM 3D
+                    Database: Firebird (RED Database)
+================================================================================
+
+--------------------------------------------------------------------------------
+1. ОСНОВНЫЕ ЗАПРОСЫ К ТАБЛИЦЕ solar_commands
+--------------------------------------------------------------------------------
+
+Посмотреть все команды:
+SELECT * FROM solar_commands;
+
+Посмотреть только необработанные команды:
+SELECT * FROM solar_commands WHERE processed = FALSE;
+
+Посмотреть обработанные команды:
+SELECT * FROM solar_commands WHERE processed = TRUE;
+
+Последние 10 команд:
+SELECT * FROM solar_commands ORDER BY created_at DESC ROWS 10;
+
+--------------------------------------------------------------------------------
+2. СОЗДАНИЕ ПЛАНЕТ (create_planet)
+--------------------------------------------------------------------------------
+
+Создать планету:
+INSERT INTO solar_commands (action, name, radius, mass, orbit_radius, color_hex)
+VALUES ('create_planet', 'NewPlanet', 8.0, 25.0, 600.0, '#FF6B6B');
+COMMIT;
+
+Планета с кастомным цветом:
+INSERT INTO solar_commands (action, name, radius, mass, orbit_radius, color_hex)
+VALUES ('create_planet', 'Mystery', 6.0, 18.0, 750.0, '#00FF88');
+COMMIT;
+
+Гигантская планета:
+INSERT INTO solar_commands (action, name, radius, mass, orbit_radius, color_hex)
+VALUES ('create_planet', 'SuperJupiter', 20.0, 150.0, 850.0, '#FF8C00');
+COMMIT;
+
+Маленькая планета/астероид:
+INSERT INTO solar_commands (action, name, radius, mass, orbit_radius, color_hex)
+VALUES ('create_planet', 'Asteroid', 2.0, 3.0, 300.0, '#808080');
+COMMIT;
+
+--------------------------------------------------------------------------------
+3. УДАЛЕНИЕ ПЛАНЕТ (destroy_planet)
+--------------------------------------------------------------------------------
+
+Удалить планету по имени:
+INSERT INTO solar_commands (action, name)
+VALUES ('destroy_planet', 'NewPlanet');
+COMMIT;
+
+Удалить несколько планет:
+INSERT INTO solar_commands (action, name) VALUES ('destroy_planet', 'Planet1');
+INSERT INTO solar_commands (action, name) VALUES ('destroy_planet', 'Planet2');
+COMMIT;
+
+--------------------------------------------------------------------------------
+4. ЗАПУСК КОМЕТ (launch_comet)
+--------------------------------------------------------------------------------
+
+Запустить комету в Солнце (target = 0):
+INSERT INTO solar_commands (action, orbit_radius)
+VALUES ('launch_comet', 0);
+COMMIT;
+
+Запустить комету в Меркурий (target = 1):
+INSERT INTO solar_commands (action, orbit_radius)
+VALUES ('launch_comet', 1);
+COMMIT;
+
+Запустить комету в Землю (target = 3):
+INSERT INTO solar_commands (action, orbit_radius)
+VALUES ('launch_comet', 3);
+COMMIT;
+
+Запустить комету в Юпитер (target = 5):
+INSERT INTO solar_commands (action, orbit_radius)
+VALUES ('launch_comet', 5);
+COMMIT;
+
+Индексы целей:
+0 = Солнце
+1 = Меркурий
+2 = Венера
+3 = Земля
+4 = Марс
+5 = Юпитер
+6 = Сатурн
+7 = Уран
+8 = Нептун
+
+--------------------------------------------------------------------------------
+5. ЧЁРНАЯ ДЫРА (create_black_hole)
+--------------------------------------------------------------------------------
+
+Создать чёрную дыру:
+INSERT INTO solar_commands (action)
+VALUES ('create_black_hole');
+COMMIT;
+
+--------------------------------------------------------------------------------
+6. ВЗРЫВ СОЛНЦА (explode_sun)
+--------------------------------------------------------------------------------
+
+Взорвать Солнце:
+INSERT INTO solar_commands (action)
+VALUES ('explode_sun');
+COMMIT;
+
+--------------------------------------------------------------------------------
+7. ПЕРЕЗАПУСК СИСТЕМЫ (reset_system)
+--------------------------------------------------------------------------------
+
+Сбросить всю систему:
+INSERT INTO solar_commands (action)
+VALUES ('reset_system');
+COMMIT;
+
+--------------------------------------------------------------------------------
+8. УПРАВЛЕНИЕ СКОРОСТЬЮ ВРЕМЕНИ (set_time_speed)
+--------------------------------------------------------------------------------
+
+Изменить скорость времени (диапазон: 0.1 - 8.0):
+
+Медленно (0.5x):
+INSERT INTO solar_commands (action, orbit_radius)
+VALUES ('set_time_speed', 0.5);
+COMMIT;
+
+Нормально (1.0x):
+INSERT INTO solar_commands (action, orbit_radius)
+VALUES ('set_time_speed', 1.0);
+COMMIT;
+
+Быстро (3.0x):
+INSERT INTO solar_commands (action, orbit_radius)
+VALUES ('set_time_speed', 3.0);
+COMMIT;
+
+Очень быстро (8.0x):
+INSERT INTO solar_commands (action, orbit_radius)
+VALUES ('set_time_speed', 8.0);
+COMMIT;
+
+--------------------------------------------------------------------------------
+9. ПОЛЕЗНЫЕ ЗАПРОСЫ (Firebird)
+--------------------------------------------------------------------------------
+
+Посчитать количество команд:
+SELECT COUNT(*) FROM solar_commands;
+
+Посчитать необработанные команды:
+SELECT COUNT(*) FROM solar_commands WHERE processed = FALSE;
+
+Посмотреть структуру таблицы:
+SELECT * FROM solar_commands WHERE 1=0;
+
+Очистить все команды:
+DELETE FROM solar_commands;
+COMMIT;
+
+Удалить только обработанные команды:
+DELETE FROM solar_commands WHERE processed = TRUE;
+COMMIT;
+
+Удалить старые команды (старше 1 дня):
+DELETE FROM solar_commands
+WHERE created_at < CURRENT_TIMESTAMP - 1;
+COMMIT;
+
+--------------------------------------------------------------------------------
+10. ЦВЕТА В HEX ФОРМАТЕ
+--------------------------------------------------------------------------------
+
+Примеры цветов:
+#FF0000 - Красный
+#00FF00 - Зелёный
+#0000FF - Синий
+#FFFF00 - Жёлтый
+#FF00FF - Пурпурный
+#00FFFF - Голубой
+#FF6B6B - Коралловый
+#4ECDC4 - Бирюзовый
+#45B7D1 - Небесно-голубой
+#96CEB4 - Шалфей
+#FFEAA7 - Кремовый
+#DDA0DD - Сливовый
+#98D8C8 - Мятный
+#F7DC6F - Золотой
+#BB8FCE - Лавандовый
+
+--------------------------------------------------------------------------------
+11. ШАБЛОНЫ ДЛЯ БЫСТРОГО КОПИРОВАНИЯ
+--------------------------------------------------------------------------------
+
+Шаблон: создать планету
+INSERT INTO solar_commands (action, name, radius, mass, orbit_radius, color_hex)
+VALUES ('create_planet', 'ИМЯ', РАДИУС, МАССА, ОРБИТА, '#ЦВЕТ');
+COMMIT;
+
+Шаблон: удалить планету
+INSERT INTO solar_commands (action, name)
+VALUES ('destroy_planet', 'ИМЯ');
+COMMIT;
+
+Шаблон: запустить комету
+INSERT INTO solar_commands (action, orbit_radius)
+VALUES ('launch_comet', НОМЕР_ПЛАНЕТЫ);
+COMMIT;
+
+--------------------------------------------------------------------------------
+12. ПАРАМЕТРЫ ПЛАНЕТ
+--------------------------------------------------------------------------------
+
+РАДИУС (radius):
+- Маленькая планета: 2.0 - 5.0
+- Средняя планета: 6.0 - 12.0
+- Большая планета: 13.0 - 20.0
+- Гигант: 21.0+
+
+МАССА (mass):
+- Астероид: 1.0 - 5.0
+- Маленькая: 6.0 - 15.0
+- Средняя: 16.0 - 50.0
+- Большая: 51.0 - 100.0
+- Гигант: 101.0+
+
+ОРБИТА (orbit_radius):
+- Меркурий: 95
+- Венера: 135
+- Земля: 175
+- Марс: 215
+- Юпитер: 290
+- Сатурн: 370
+- Уран: 450
+- Нептун: 530
+- За Нептуном: 600+
+
+================================================================================
+                           ВАЖНО
+================================================================================
+
+- Всегда выполняйте COMMIT после INSERT
+- Проверяйте, что processed = FALSE перед выполнением
+- Не удаляйте команды, пока они не обработаны (processed = TRUE)
+- Путь к базе: D:/Solar.fdb
+- Пользователь: SYSDBA, Пароль: masterkey
+
+================================================================================
