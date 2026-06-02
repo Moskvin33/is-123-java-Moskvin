@@ -19,7 +19,6 @@ public class SolarDatabaseInitializer {
         DB_URL = "jdbc:sqlite:" + DB_PATH + DB_NAME;
     }
 
-    // Таблица полностью совпадает с подсказкой в твоей консоли
     private static final String CREATE_TABLES_SQL = """
         CREATE TABLE IF NOT EXISTS SOLAR_COMMANDS (
             ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,7 +47,7 @@ public class SolarDatabaseInitializer {
 
             boolean dbExists = Files.exists(Paths.get(DB_PATH + DB_NAME));
             if (!dbExists) {
-                System.out.println("🌌 Создание новой БД SQLite для Солнечной системы...");
+                System.out.println(" Создание новой БД SQLite для Солнечной системы...");
                 try (Connection conn = DriverManager.getConnection(DB_URL);
                      Statement stmt = conn.createStatement()) {
 
@@ -59,13 +58,13 @@ public class SolarDatabaseInitializer {
                         String trimmed = sql.trim();
                         if (!trimmed.isEmpty()) stmt.execute(trimmed);
                     }
-                    System.out.println("✅ БД успешно создана: " + DB_PATH + DB_NAME);
+                    System.out.println(" БД успешно создана: " + DB_PATH + DB_NAME);
                 }
             } else {
-                System.out.println("ℹ️ БД уже существует: " + DB_PATH + DB_NAME);
+                System.out.println("ℹ БД уже существует: " + DB_PATH + DB_NAME);
             }
         } catch (Exception e) {
-            System.err.println("❌ Ошибка инициализации БД: " + e.getMessage());
+            System.err.println(" Ошибка инициализации БД: " + e.getMessage());
             e.printStackTrace();
         }
     }
