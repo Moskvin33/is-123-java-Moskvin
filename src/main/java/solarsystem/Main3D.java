@@ -88,17 +88,17 @@ public class Main3D extends Application {
     private double physicsTimeAcc = 0;
     private final double PHYSICS_DT = 0.016;
 
-    // === ПАТТЕРНЫ ===
+    // === PATTERNS ===
     private Map<String, CelestialFactory> factories = new HashMap<>();
     private List<SimulationObserver> observers = new ArrayList<>();
 
-    // === БД ===
+    // === DATABASE ===
     private static String DB_URL;
     private static final String DB_NAME = "solar_system.db";
     private Timeline dbPoller;
     private final Set<Integer> processedCommandIds = new HashSet<>();
 
-    // Консоль
+    // Console
     private TextField consoleInput;
     private boolean consoleVisible = false;
 
@@ -127,7 +127,7 @@ public class Main3D extends Application {
         startDbPolling();
 
         startGameLoop(); startMovementTimer(); startHUDUpdater();
-        primaryStage.setTitle("3D Солнечная Система");
+        primaryStage.setTitle("3D Solar System");
         primaryStage.setScene(scene); primaryStage.show();
         printControls();
     }
@@ -155,9 +155,9 @@ public class Main3D extends Application {
         try (Connection conn = DriverManager.getConnection(DB_URL);
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            System.out.println("✅ SQL: " + sql.substring(0, Math.min(60, sql.length())) + "...");
+            System.out.println("SQL executed: " + sql.substring(0, Math.min(60, sql.length())) + "...");
         } catch (Exception e) {
-            System.err.println("❌ SQL Error: " + e.getMessage());
+            System.err.println("SQL Error: " + e.getMessage());
         }
     }
 
@@ -179,7 +179,7 @@ public class Main3D extends Application {
                 stmt.execute("PRAGMA foreign_keys = ON;");
 
                 if (!dbExists) {
-                    System.out.println("🌌 Creating DB...");
+                    System.out.println("Initializing database...");
                     stmt.execute("CREATE TABLE IF NOT EXISTS SOLAR_COMMANDS (" +
                             "ID INTEGER PRIMARY KEY AUTOINCREMENT, ACTION TEXT, NAME TEXT, " +
                             "RADIUS REAL, MASS REAL, ORBIT_RADIUS REAL, COLOR_HEX TEXT, " +
@@ -187,13 +187,13 @@ public class Main3D extends Application {
                     stmt.execute("CREATE TABLE IF NOT EXISTS SIMULATION_LOGS (" +
                             "ID INTEGER PRIMARY KEY AUTOINCREMENT, EVENT TEXT, DETAILS TEXT, " +
                             "TIMESTAMP DATETIME DEFAULT CURRENT_TIMESTAMP)");
-                    System.out.println("✅ DB created: " + DB_URL);
+                    System.out.println("Database created: " + DB_URL);
                 } else {
-                    System.out.println("ℹ️ DB exists: " + DB_URL);
+                    System.out.println("Database exists: " + DB_URL);
                 }
             }
         } catch (Exception e) {
-            System.err.println("❌ DB init error: " + e.getMessage());
+            System.err.println("Database initialization error: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -208,13 +208,13 @@ public class Main3D extends Application {
         observers.add(new DbLoggerObserver());
         observers.add(new ConsoleObserver());
         observers.add(new VisualEffectObserver());
-        System.out.println("🔧 Patterns init: " + factories.size() + " factories, " + observers.size() + " observers");
+        System.out.println("Patterns initialized: " + factories.size() + " factories, " + observers.size() + " observers");
     }
 
     private void notifyObservers(String eventType, Map<String, Object> data) {
         for (SimulationObserver obs : observers) {
             try { obs.onEvent(eventType, data); }
-            catch (Exception e) { System.err.println("⚠️ Observer " + obs.getObserverName() + " error: " + e.getMessage()); }
+            catch (Exception e) { System.err.println("Observer " + obs.getObserverName() + " error: " + e.getMessage()); }
         }
     }
 
@@ -222,7 +222,7 @@ public class Main3D extends Application {
         dbPoller = new Timeline(new KeyFrame(Duration.seconds(2), e -> pollSolarCommands()));
         dbPoller.setCycleCount(Timeline.INDEFINITE);
         dbPoller.play();
-        System.out.println("📡 Polling started (2s interval)");
+        System.out.println("Polling started (2s interval)");
     }
 
     private void pollSolarCommands() {
@@ -262,7 +262,7 @@ public class Main3D extends Application {
                     }
                 }
 
-                if (count > 0) System.out.println("🔄 Processed " + count + " command(s)");
+                if (count > 0) System.out.println("Processed " + count + " command(s)");
                 return;
 
             } catch (Exception e) {
@@ -270,13 +270,13 @@ public class Main3D extends Application {
                 if (msg != null && (msg.contains("SQLITE_BUSY") || msg.contains("database is locked"))) {
                     retryCount++;
                     if (retryCount >= maxRetries) {
-                        System.err.println("❌ Poll error after " + maxRetries + " retries: " + msg);
+                        System.err.println("Poll error after " + maxRetries + " retries: " + msg);
                         return;
                     }
                     try { Thread.sleep(500 * retryCount); }
                     catch (InterruptedException ie) { Thread.currentThread().interrupt(); return; }
                 } else {
-                    System.err.println("❌ Poll error: " + msg);
+                    System.err.println("Poll error: " + msg);
                     e.printStackTrace();
                     return;
                 }
@@ -297,7 +297,7 @@ public class Main3D extends Application {
                     launchComet(target);
                     ev.put("target", target);
                     notifyObservers("COMET_LAUNCHED", ev);
-                    System.out.println("🚀 Comet to: " + target);
+                    System.out.println("Comet launched to target: " + target);
                 }
             }
             case "create_black_hole" -> {
@@ -315,7 +315,7 @@ public class Main3D extends Application {
                 spawnBlackHoleVisual(bh);
                 ev.put("type", "blackhole");
                 notifyObservers("BLACK_HOLE_SPAWNED", ev);
-                System.out.println(" Black hole created at: (" + bhX + ", " + bhY + ", " + bhZ + ")");
+                System.out.println("Black hole created at: (" + bhX + ", " + bhY + ", " + bhZ + ")");
             }
             case "create_planet" -> {
                 Color color = (colorHex != null && colorHex.matches("#[0-9A-Fa-f]{6}")) ? Color.web(colorHex) : Color.rgb(100,150,200);
@@ -333,7 +333,7 @@ public class Main3D extends Application {
 
                 ev.put("radius", radius);
                 notifyObservers("PLANET_CREATED", ev);
-                System.out.println("✅ Planet created: " + name);
+                System.out.println("Planet created: " + name);
             }
             case "destroy_planet" -> {
                 if (name == null) return;
@@ -343,18 +343,18 @@ public class Main3D extends Application {
                         explodePlanet(i);
                         ev.put("target", name);
                         notifyObservers("EXPLOSION", ev);
-                        System.out.println("💥 Destroyed: " + name);
+                        System.out.println("Planet destroyed: " + name);
                         return;
                     }
                 }
-                System.out.println("⚠️ Planet not found: " + name);
+                System.out.println("Planet not found: " + name);
             }
             case "reset_system" -> {
                 resetSystem();
                 notifyObservers("SYSTEM_RESET", ev);
-                System.out.println("🔄 Reset done");
+                System.out.println("System reset complete");
             }
-            default -> System.out.println("⚠️ Unknown command: '" + act + "'");
+            default -> System.out.println("Unknown command: '" + act + "'");
         }
     }
 
@@ -413,24 +413,24 @@ public class Main3D extends Application {
 
     private void updateHUDText() {
         StringBuilder sb = new StringBuilder();
-        sb.append("☀️ СОЛНЕЧНАЯ СИСТЕМА\nУничтожено: ").append(destroyedPlanets).append("\n\n");
+        sb.append("SOLAR SYSTEM\nDestroyed: ").append(destroyedPlanets).append("\n\n");
         if (cometActive && cometGroup!=null) {
             double sp = Math.hypot(cometGroup.getTranslateX(),Math.hypot(cometGroup.getTranslateY(),cometGroup.getTranslateZ()))*10;
             double dist = Math.hypot(getTargetX()-cometGroup.getTranslateX(),Math.hypot(getTargetY()-cometGroup.getTranslateY(),getTargetZ()-cometGroup.getTranslateZ()));
-            sb.append("☄️ КОМЕТА:\nСкорость: ").append(String.format("%.1f", sp)).append("\nДистанция: ").append(String.format("%.0f", dist)).append("\n\n");
+            sb.append("COMET:\nSpeed: ").append(String.format("%.1f", sp)).append("\nDistance: ").append(String.format("%.0f", dist)).append("\n\n");
         }
-        if (blackHoleActive) sb.append("🕳 ЧЁРНАЯ ДЫРА: Активна\n\n");
-        sb.append("УПРАВЛЕНИЕ:\nПКМ+Мышь - Вращение | WASD - Полёт | Q/E - Вверх/Вниз\n0-8 - Запустить комету | B - Чёрная дыра | ` - Консоль SQL\nПробел - Пауза | +/- - Скорость | X - Сброс");
+        if (blackHoleActive) sb.append("BLACK HOLE: Active\n\n");
+        sb.append("CONTROLS:\nRMB+Mouse - Rotate | WASD - Move | Q/E - Up/Down\n0-8 - Launch Comet | B - Black Hole | ` - SQL Console\nSpace - Pause | +/- - Speed | X - Reset");
         hudText.setText(sb.toString());
     }
 
     private String getTargetDisplayName() {
-        if (targetIndex == -1) return "Солнце";
+        if (targetIndex == -1) return "Sun";
         if (targetIndex >= 1 && targetIndex <= 8) {
-            String[] names = { " ", "Меркурий", "Венера", "Земля", "Марс", "Юпитер", "Сатурн", "Уран", "Нептун"};
+            String[] names = { "", "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"};
             return names[targetIndex];
         }
-        return "Неизвестно";
+        return "Unknown";
     }
 
     private double getTargetX() {
@@ -486,7 +486,11 @@ public class Main3D extends Application {
         }
     }
     private void printControls() {
-        System.out.println("\n☀️ 3D СОЛНЕЧНАЯ СИСТЕМА\n-------------------------------\n0-8: Запустить комету | B: Чёрная дыра | `: Консоль SQL\nWASD: Полёт | ПКМ: Вращение | Пробел: Пауза | X: Сброс\n-------------------------------");
+        System.out.println("\n=== 3D SOLAR SYSTEM ===");
+        System.out.println("-------------------------------");
+        System.out.println("0-8: Launch Comet | B: Black Hole | `: SQL Console");
+        System.out.println("WASD: Move | RMB: Rotate | Space: Pause | X: Reset");
+        System.out.println("-------------------------------\n");
     }
     private void setupCamera() {
         camera=new PerspectiveCamera(true);
@@ -593,13 +597,13 @@ public class Main3D extends Application {
         double h = (random.nextDouble() - 0.5) * 2500;
         double sx, sy, sz;
 
-        if(target == 0){ sx = Math.cos(ang) * sd; sy = h; sz = Math.sin(ang) * sd; System.out.println("Comet to SUN!"); }
+        if(target == 0){ sx = Math.cos(ang) * sd; sy = h; sz = Math.sin(ang) * sd; System.out.println("Comet launched to SUN!"); }
         else {
             List<CelestialBody> bodies = solarSystem.getBodies();
             if (target < bodies.size()) {
                 CelestialBody tg = bodies.get(target);
                 sx = tg.x + Math.cos(ang) * sd; sy = tg.y + h; sz = tg.z + Math.sin(ang) * sd;
-                System.out.println("Comet to: " + getTargetDisplayName());
+                System.out.println("Comet launched to: " + getTargetDisplayName());
             } else return;
         }
         cometGroup.setTranslateX(sx); cometGroup.setTranslateY(sy); cometGroup.setTranslateZ(sz);
@@ -800,7 +804,7 @@ public class Main3D extends Application {
                 case ADD: case EQUALS: timeSpeed*=1.5; timeSpeed=Math.min(timeSpeed,8.0); break;
                 case SUBTRACT: case MINUS: timeSpeed/=1.5; timeSpeed=Math.max(timeSpeed,0.1); break;
                 case R: camera.setTranslateX(0);camera.setTranslateY(0);camera.setTranslateZ(2800);cameraRotateY.setAngle(180);cameraRotateX.setAngle(0);followYaw=0;followPitch=0;cameraMode=CameraMode.FREE; break;
-                case C: if(cometActive) cameraMode=CameraMode.FOLLOW_COMET; break; // 🔥 СЛЕЖЕНИЕ ЗА КОМЕТОЙ
+                case C: if(cometActive) cameraMode=CameraMode.FOLLOW_COMET; break;
                 case F: cameraMode=CameraMode.FREE; break;
                 case B: spawnBlackHole(); break;
                 case X: resetSystem(); break;
@@ -879,7 +883,7 @@ public class Main3D extends Application {
 
         blackHoleActive = true;
         updateHUDText();
-        System.out.println("🕳 Black hole spawned at: (" + blackHoleX + ", " + blackHoleY + ", " + blackHoleZ + ")");
+        System.out.println("Black hole spawned at: (" + blackHoleX + ", " + blackHoleY + ", " + blackHoleZ + ")");
     }
 
     public static void main(String[] args) { launch(args); }

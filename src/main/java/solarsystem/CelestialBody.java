@@ -24,7 +24,7 @@ public class CelestialBody {
     }
 
     public void integratePosition(double dt) {
-        // Velocity Verlet integration
+
         x += vx * dt + 0.5 * ax * dt * dt;
         y += vy * dt + 0.5 * ay * dt * dt;
         z += vz * dt + 0.5 * az * dt * dt;

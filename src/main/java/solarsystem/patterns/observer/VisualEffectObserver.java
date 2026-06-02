@@ -7,15 +7,15 @@ public class VisualEffectObserver implements SimulationObserver {
     public void onEvent(String eventType, Map<String, Object> data) {
         switch (eventType) {
             case "PLANET_CREATED" ->
-                    System.out.println("✨ [VFX] Glow & orbit line for: " + data.get("name"));
+                    System.out.println(" [VFX] Glow & orbit line for: " + data.get("name"));
             case "EXPLOSION" ->
-                    System.out.println("💥 [VFX] Flash, shockwave & debris particles");
+                    System.out.println(" [VFX] Flash, shockwave & debris particles");
             case "BLACK_HOLE_SPAWNED" ->
-                    System.out.println("🕳 [VFX] Accretion disk & gravitational lensing");
+                    System.out.println(" [VFX] Accretion disk & gravitational lensing");
             case "COMET_LAUNCHED" ->
-                    System.out.println("🔥 [VFX] Fire trail & heat distortion");
+                    System.out.println(" [VFX] Fire trail & heat distortion");
             default ->
-                    System.out.println("🎨 [VFX] Generic effect triggered for: " + eventType);
+                    System.out.println(" [VFX] Generic effect triggered for: " + eventType);
         }
     }
 
