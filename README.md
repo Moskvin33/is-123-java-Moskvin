@@ -5,6 +5,10 @@
 [![SQLite](https://img.shields.io/badge/SQLite-3.x-green)](https://www.sqlite.org/)
 [![Maven](https://img.shields.io/badge/Maven-3.8+-red)](https://maven.apache.org/)
 
+<div align="center">
+  <img src="https://i.gifer.com/IrE.gif" alt="Solar System Preview" width="600"/>
+</div>
+
 Интерактивная 3D-визуализация солнечной системы с физической моделью гравитации, управлением через SQL-команды и расширенными визуальными эффектами.
 
 ---
