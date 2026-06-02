@@ -20,7 +20,7 @@ public class DbLoggerObserver implements SimulationObserver {
             stmt.setString(2, details);
             stmt.executeUpdate();
         } catch (Exception e) {
-            System.err.println("❌ DB Log error: " + e.getMessage());
+            System.err.println(" DB Log error: " + e.getMessage());
         }
     }
 
