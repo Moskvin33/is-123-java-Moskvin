@@ -6,7 +6,7 @@
 [![Maven](https://img.shields.io/badge/Maven-3.8+-red)](https://maven.apache.org/)
 
 <div align="center">
-  <img src="https://i.gifer.com/Civ.gif" alt="Solar System Preview" width="600"/>
+  <img src="https://i.gifer.com/8OpY.gif" alt="Solar System Preview" width="600"/>
 </div>
 
 Интерактивная 3D-визуализация солнечной системы с физической моделью гравитации, управлением через SQL-команды и расширенными визуальными эффектами.
